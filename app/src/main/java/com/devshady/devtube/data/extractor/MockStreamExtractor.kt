@@ -6,9 +6,10 @@ import javax.inject.Inject
 class MockStreamExtractor @Inject constructor() : MediaStreamExtractor {
     override suspend fun extractPlayableUri(mediaId: String, isAudioOnly: Boolean): String {
         return if (isAudioOnly) {
-            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            "https://storage.googleapis.com/exoplayer-test-media-0/play.mp3"
         } else {
-            "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"
+            // Stable MP4 test stream from Google
+            "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"
         }
     }
 }
