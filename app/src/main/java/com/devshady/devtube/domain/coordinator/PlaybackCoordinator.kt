@@ -24,6 +24,11 @@ class PlaybackCoordinator(
     val sessionState: StateFlow<PlaybackSessionState> = mediaController.sessionState
 
     /**
+     * Exposes the connection status of the underlying media engine.
+     */
+    val isConnected: StateFlow<Boolean> = mediaController.isConnected
+
+    /**
      * Prepares and starts playback for a media item by ID/URL.
      */
     suspend fun playMedia(id: String) {
@@ -34,7 +39,6 @@ class PlaybackCoordinator(
             val playableUri = streamExtractor.extractPlayableUri(id, isAudioOnly)
             
             mediaController.prepare(mediaItem, playableUri)
-            mediaController.play()
         }
     }
 

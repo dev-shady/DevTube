@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 interface IMediaController {
     val sessionState: StateFlow<PlaybackSessionState>
+    val isConnected: StateFlow<Boolean>
     
     fun play()
     fun pause()
