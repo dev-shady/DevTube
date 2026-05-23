@@ -5,24 +5,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
+import com.devshady.devtube.presentation.player.LocalPlayerHandleProvider
 
 @OptIn(UnstableApi::class)
 @Composable
 fun VideoSurfaceRenderer(
-    player: Player?,
     modifier: Modifier = Modifier
 ) {
+    val provider = LocalPlayerHandleProvider.current
+    
     AndroidView(
         factory = { context ->
             PlayerView(context).apply {
                 useController = false
-                this.player = player
+                player = provider.getPlayer()
             }
         },
         update = { playerView ->
-            playerView.player = player
+            val currentPlayer = provider.getPlayer()
+            if (playerView.player != currentPlayer) {
+                playerView.player = currentPlayer
+            }
         },
         modifier = modifier,
         onRelease = { playerView ->

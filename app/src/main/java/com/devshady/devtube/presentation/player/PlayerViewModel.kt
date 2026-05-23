@@ -16,13 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val playbackCoordinator: PlaybackCoordinator,
-    private val playerHandleProvider: PlayerHandleProvider
+    private val playbackCoordinator: PlaybackCoordinator
 ) : ViewModel() {
-
-    fun getPlayer(): Player? {
-        return playerHandleProvider.getPlayer()
-    }
 
     private val _urlInput = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(false)

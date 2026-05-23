@@ -31,7 +31,6 @@ fun PlayerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val clipboardManager = LocalClipboardManager.current
-    val player = viewModel.getPlayer()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -109,7 +108,6 @@ fun PlayerScreen(
             ) {
                 if (uiState.isVideo) {
                     VideoSurfaceRenderer(
-                        player = player,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
