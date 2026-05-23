@@ -1,10 +1,10 @@
 package com.devshady.devtube.domain.coordinator
 
+import com.devshady.devtube.data.extractor.StreamExtractorFactory
 import com.devshady.devtube.domain.model.DomainMediaItem
 import com.devshady.devtube.domain.model.MediaSourceType
 import com.devshady.devtube.domain.model.PlaybackSessionState
 import com.devshady.devtube.domain.playback.IMediaController
-import com.devshady.devtube.domain.playback.MediaStreamExtractor
 import com.devshady.devtube.domain.playback.MediaUrlParser
 import com.devshady.devtube.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 class PlaybackCoordinator(
     private val mediaController: IMediaController,
     private val mediaRepository: MediaRepository,
-    private val urlParser: MediaUrlParser,
-    private val streamExtractor: MediaStreamExtractor
+    private val urlParsers: Set<MediaUrlParser>,
+    private val extractorFactory: StreamExtractorFactory
 ) {
     /**
      * Exposes the current playback session state.
@@ -34,11 +34,15 @@ class PlaybackCoordinator(
     suspend fun playMedia(id: String) {
         val mediaItem = mediaRepository.getMediaItem(id)
         if (mediaItem != null) {
-            val sourceType = urlParser.parseSourceType(id)
+            val parser = urlParsers.find { it.canHandle(id) }
+            val sourceType = parser?.parseSourceType(id) ?: MediaSourceType.UNKNOWN
+            
             val isAudioOnly = sourceType == MediaSourceType.YOUTUBE_MUSIC
+            val streamExtractor = extractorFactory.getExtractor(sourceType)
             val playableUri = streamExtractor.extractPlayableUri(id, isAudioOnly)
             
             mediaController.prepare(mediaItem, playableUri)
+            mediaController.play()
         }
     }
 

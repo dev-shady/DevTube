@@ -18,4 +18,8 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindMediaRepository(impl: MediaRepositoryImpl): MediaRepository
+
+    @Binds
+    @IntoSet
+    abstract fun bindYouTubeUrlParser(impl: YouTubeUrlParser): MediaUrlParser
 }

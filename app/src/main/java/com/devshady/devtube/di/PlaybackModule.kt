@@ -6,9 +6,7 @@ import com.devshady.devtube.presentation.player.PlayerHandleProvider
 import com.devshady.devtube.domain.coordinator.PlaybackCoordinator
 import com.devshady.devtube.domain.repository.MediaRepository
 import com.devshady.devtube.domain.playback.MediaUrlParser
-import com.devshady.devtube.domain.playback.MediaStreamExtractor
-import com.devshady.devtube.data.parser.YouTubeUrlParser
-import com.devshady.devtube.data.extractor.MockStreamExtractor
+import com.devshady.devtube.data.extractor.StreamExtractorFactory
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -28,24 +26,16 @@ abstract class PlaybackModule {
     @Singleton
     abstract fun bindPlayerHandleProvider(impl: MediaControllerImpl): PlayerHandleProvider
 
-    @Binds
-    @Singleton
-    abstract fun bindMediaUrlParser(impl: YouTubeUrlParser): MediaUrlParser
-
-    @Binds
-    @Singleton
-    abstract fun bindMediaStreamExtractor(impl: MockStreamExtractor): MediaStreamExtractor
-
     companion object {
         @Provides
         @Singleton
         fun providePlaybackCoordinator(
             mediaController: IMediaController,
             mediaRepository: MediaRepository,
-            urlParser: MediaUrlParser,
-            streamExtractor: MediaStreamExtractor
+            urlParsers: Set<@JvmSuppressWildcards MediaUrlParser>,
+            extractorFactory: StreamExtractorFactory
         ): PlaybackCoordinator {
-            return PlaybackCoordinator(mediaController, mediaRepository, urlParser, streamExtractor)
+            return PlaybackCoordinator(mediaController, mediaRepository, urlParsers, extractorFactory)
         }
     }
 }
