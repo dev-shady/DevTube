@@ -5,7 +5,12 @@ package com.devshady.devtube.domain.model
  */
 sealed class PlaybackSessionState {
     object Idle : PlaybackSessionState()
-    object Buffering : PlaybackSessionState()
+    
+    data class Buffering(
+        val currentItem: DomainMediaItem,
+        val position: Long,
+        val duration: Long
+    ) : PlaybackSessionState()
     
     data class Playing(
         val currentItem: DomainMediaItem,

@@ -32,6 +32,7 @@ class PlayerViewModel @Inject constructor(
         val currentItem = when (sessionState) {
             is PlaybackSessionState.Playing -> sessionState.currentItem
             is PlaybackSessionState.Paused -> sessionState.currentItem
+            is PlaybackSessionState.Buffering -> sessionState.currentItem
             else -> null
         }
         PlayerUiState(

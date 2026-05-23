@@ -125,7 +125,11 @@ class MediaControllerImpl @Inject constructor(
             currentController.playerError != null -> {
                 PlaybackSessionState.Error(currentController.playerError?.message ?: "Playback error")
             }
-            currentController.playbackState == Player.STATE_BUFFERING -> PlaybackSessionState.Buffering
+            currentController.playbackState == Player.STATE_BUFFERING -> {
+                domainItem?.let {
+                    PlaybackSessionState.Buffering(it, currentController.currentPosition, currentController.duration)
+                } ?: PlaybackSessionState.Idle
+            }
             currentController.isPlaying -> {
                 domainItem?.let {
                     PlaybackSessionState.Playing(it, currentController.currentPosition, currentController.duration)

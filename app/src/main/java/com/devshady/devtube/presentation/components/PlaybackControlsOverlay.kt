@@ -28,18 +28,21 @@ fun PlaybackControlsOverlay(
     val currentItem = when (state) {
         is PlaybackSessionState.Playing -> state.currentItem
         is PlaybackSessionState.Paused -> state.currentItem
+        is PlaybackSessionState.Buffering -> state.currentItem
         else -> null
     }
 
     val position = when (state) {
         is PlaybackSessionState.Playing -> state.position
         is PlaybackSessionState.Paused -> state.position
+        is PlaybackSessionState.Buffering -> state.position
         else -> 0L
     }
 
     val duration = when (state) {
         is PlaybackSessionState.Playing -> state.duration
         is PlaybackSessionState.Paused -> state.duration
+        is PlaybackSessionState.Buffering -> state.duration
         else -> 0L
     }
 
