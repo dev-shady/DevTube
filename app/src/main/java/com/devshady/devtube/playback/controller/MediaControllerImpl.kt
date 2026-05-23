@@ -18,18 +18,21 @@ import com.devshady.devtube.playback.service.PlaybackService
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val EXTRA_IS_VIDEO = "is_video"
+private const val POSITION_UPDATE_INTERVAL_MS = 500L
 
 @Singleton
 class MediaControllerImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : IMediaController, PlayerHandleProvider {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var positionUpdateJob: Job? = null
 
     private var controllerFuture: ListenableFuture<MediaController>? = null
     val controller: MediaController?
@@ -60,13 +63,40 @@ class MediaControllerImpl @Inject constructor(
         controllerFuture?.addListener({
             _isConnected.value = true
             controller?.addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) = updateState()
-                override fun onIsPlayingChanged(isPlaying: Boolean) = updateState()
-                override fun onPlayerError(error: androidx.media3.common.PlaybackException) = updateState()
-                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = updateState()
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    updateState()
+                    handlePositionPolling(controller?.isPlaying == true)
+                }
+
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    updateState()
+                    handlePositionPolling(isPlaying)
+                }
+
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    updateState()
+                    handlePositionPolling(false)
+                }
+
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    updateState()
+                }
             })
             updateState()
+            handlePositionPolling(controller?.isPlaying == true)
         }, mainExecutor)
+    }
+
+    private fun handlePositionPolling(isPlaying: Boolean) {
+        positionUpdateJob?.cancel()
+        if (isPlaying) {
+            positionUpdateJob = scope.launch {
+                while (isActive) {
+                    delay(POSITION_UPDATE_INTERVAL_MS)
+                    updateState()
+                }
+            }
+        }
     }
 
     private fun updateState() {

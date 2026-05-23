@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,6 +45,15 @@ fun PlaybackControlsOverlay(
 
     val isPlaying = state is PlaybackSessionState.Playing
 
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    LaunchedEffect(position, duration) {
+        if (!isDragging && duration > 0) {
+            sliderPosition = position.toFloat() / duration.toFloat()
+        }
+    }
+
     Box(
         modifier = modifier
             .background(
@@ -79,8 +88,15 @@ fun PlaybackControlsOverlay(
             Spacer(modifier = Modifier.height(16.dp))
 
             Slider(
-                value = if (duration > 0) position.toFloat() / duration.toFloat() else 0f,
-                onValueChange = { onSeek((it * duration).toLong()) },
+                value = sliderPosition,
+                onValueChange = { 
+                    isDragging = true
+                    sliderPosition = it 
+                },
+                onValueChangeFinished = {
+                    isDragging = false
+                    onSeek((sliderPosition * duration).toLong())
+                },
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -93,7 +109,7 @@ fun PlaybackControlsOverlay(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = formatTime(position),
+                    text = if (isDragging) formatTime((sliderPosition * duration).toLong()) else formatTime(position),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White
                 )
