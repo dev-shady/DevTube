@@ -6,12 +6,13 @@ import javax.inject.Inject
 import javax.inject.Provider
 
 class StreamExtractorFactory @Inject constructor(
-    private val mockExtractor: Provider<MockStreamExtractor>
+    private val mockExtractor: Provider<MockStreamExtractor>,
+    private val youtubeExtractor: Provider<YoutubeStreamExtractor>
 ) {
     fun getExtractor(type: MediaSourceType): MediaStreamExtractor {
         return when (type) {
-            MediaSourceType.YOUTUBE, MediaSourceType.YOUTUBE_MUSIC -> mockExtractor.get()
-            else -> mockExtractor.get() // Fallback to mock
+            MediaSourceType.YOUTUBE, MediaSourceType.YOUTUBE_MUSIC -> youtubeExtractor.get()
+            else -> mockExtractor.get()
         }
     }
 }
