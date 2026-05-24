@@ -1,5 +1,6 @@
 package com.devshady.devtube.domain.coordinator
 
+import android.util.Log
 import com.devshady.devtube.data.extractor.StreamExtractorFactory
 import com.devshady.devtube.domain.model.DomainMediaItem
 import com.devshady.devtube.domain.model.MediaSourceType
@@ -36,7 +37,7 @@ class PlaybackCoordinator(
         if (mediaItem != null) {
             val parser = urlParsers.find { it.canHandle(id) }
             val sourceType = parser?.parseSourceType(id) ?: MediaSourceType.UNKNOWN
-            
+            Log.d("playMedia", "${sourceType} ${parser} ${id}")
             val isAudioOnly = sourceType == MediaSourceType.YOUTUBE_MUSIC
             val streamExtractor = extractorFactory.getExtractor(sourceType)
             val playableUri = streamExtractor.extractPlayableUri(id, isAudioOnly)

@@ -1,5 +1,6 @@
 package com.devshady.devtube.di
 
+import com.devshady.devtube.data.parser.SoundCloudUrlParser
 import com.devshady.devtube.data.repository.MediaRepositoryImpl
 import com.devshady.devtube.domain.repository.MediaRepository
 import com.devshady.devtube.domain.playback.MediaUrlParser
@@ -22,4 +23,8 @@ abstract class DataModule {
     @Binds
     @IntoSet
     abstract fun bindYouTubeUrlParser(impl: YouTubeUrlParser): MediaUrlParser
+
+    @Binds
+    @IntoSet
+    abstract fun bindSoundCloudParser(impl: SoundCloudUrlParser): MediaUrlParser
 }
