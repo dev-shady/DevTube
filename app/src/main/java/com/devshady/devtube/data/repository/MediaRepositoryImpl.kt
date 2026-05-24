@@ -12,17 +12,11 @@ class MediaRepositoryImpl @Inject constructor(
     private val extractorFactory: StreamExtractorFactory
 ) : MediaRepository {
 
-    override suspend fun getMediaItem(id: String): DomainMediaItem? {
+    override suspend fun getMediaItem(id: String): DomainMediaItem {
         val parser = urlParsers.find { it.canHandle(id) }
         val sourceType = parser?.parseSourceType(id) ?: MediaSourceType.UNKNOWN
-        val isAudioOnly = sourceType == MediaSourceType.YOUTUBE_MUSIC
-        
-        return DomainMediaItem(
-            id = id,
-            title = "Mock Title for $id",
-            artist = "Mock Artist",
-            artworkUrl = "https://picsum.photos/seed/$id/400/400",
-            isVideo = !isAudioOnly
-        )
+        val extractor = extractorFactory.getExtractor(sourceType)
+        val isAudioOnly = sourceType == MediaSourceType.YOUTUBE_MUSIC || sourceType == MediaSourceType.SOUNDCLOUD
+        return extractor.extractPlayableUri(id, isAudioOnly)
     }
 }

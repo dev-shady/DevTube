@@ -1,5 +1,7 @@
 package com.devshady.devtube.domain.playback
 
+import com.devshady.devtube.domain.model.DomainMediaItem
+
 /**
  * Interface for extracting playable stream URIs from media IDs.
  */
@@ -10,5 +12,5 @@ interface MediaStreamExtractor {
      * @param isAudioOnly Whether to extract only the audio stream.
      * @return The playable URI.
      */
-    suspend fun extractPlayableUri(mediaId: String, isAudioOnly: Boolean): String
+    suspend fun extractPlayableUri(mediaId: String, isAudioOnly: Boolean): DomainMediaItem
 }

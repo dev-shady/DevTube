@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 class PlaybackCoordinator(
     private val mediaController: IMediaController,
     private val mediaRepository: MediaRepository,
-    private val urlParsers: Set<MediaUrlParser>,
-    private val extractorFactory: StreamExtractorFactory
 ) {
     /**
      * Exposes the current playback session state.
@@ -35,13 +33,8 @@ class PlaybackCoordinator(
     suspend fun playMedia(id: String) {
         val mediaItem = mediaRepository.getMediaItem(id)
         if (mediaItem != null) {
-            val parser = urlParsers.find { it.canHandle(id) }
-            val sourceType = parser?.parseSourceType(id) ?: MediaSourceType.UNKNOWN
-            Log.d("playMedia", "${sourceType} ${parser} ${id}")
-            val isAudioOnly = sourceType == MediaSourceType.YOUTUBE_MUSIC
-            val streamExtractor = extractorFactory.getExtractor(sourceType)
-            val playableUri = streamExtractor.extractPlayableUri(id, isAudioOnly)
-            
+            val playableUri = mediaItem.resolvedStreamingUrl
+            Log.d("playMedia", "${mediaItem} ${playableUri} ${id}")
             mediaController.prepare(mediaItem, playableUri)
             mediaController.play()
         }

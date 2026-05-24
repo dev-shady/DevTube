@@ -32,10 +32,8 @@ abstract class PlaybackModule {
         fun providePlaybackCoordinator(
             mediaController: IMediaController,
             mediaRepository: MediaRepository,
-            urlParsers: Set<@JvmSuppressWildcards MediaUrlParser>,
-            extractorFactory: StreamExtractorFactory
         ): PlaybackCoordinator {
-            return PlaybackCoordinator(mediaController, mediaRepository, urlParsers, extractorFactory)
+            return PlaybackCoordinator(mediaController, mediaRepository)
         }
     }
 }

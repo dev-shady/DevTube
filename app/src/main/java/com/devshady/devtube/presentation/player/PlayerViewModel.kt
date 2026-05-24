@@ -1,5 +1,6 @@
 package com.devshady.devtube.presentation.player
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devshady.devtube.domain.coordinator.PlaybackCoordinator
@@ -35,6 +36,7 @@ class PlayerViewModel @Inject constructor(
             is PlaybackSessionState.Buffering -> sessionState.currentItem
             else -> null
         }
+
         PlayerUiState(
             urlInput = url,
             playbackState = sessionState,

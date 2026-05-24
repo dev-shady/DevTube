@@ -1,5 +1,6 @@
 package com.devshady.devtube.presentation.player
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -111,12 +112,15 @@ fun PlayerScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
+                    Log.d("PlayerScreen", "Current item in screen: ${uiState.currentMediaItem}")
                     AsyncImage(
                         model = uiState.currentMediaItem?.artworkUrl,
                         contentDescription = "Artwork",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                        error = null // Placeholder for missing artwork
+                        onError = { state ->
+                            Log.e("PlayerScreen", "AsyncImage error: ${state.result.throwable.message}")
+                        }
                     )
                 }
 

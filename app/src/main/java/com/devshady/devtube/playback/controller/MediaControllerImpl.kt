@@ -5,9 +5,11 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.devshady.devtube.domain.model.DomainMediaItem
@@ -26,6 +28,7 @@ import javax.inject.Singleton
 private const val EXTRA_IS_VIDEO = "is_video"
 private const val POSITION_UPDATE_INTERVAL_MS = 500L
 
+@OptIn(UnstableApi::class)
 @Singleton
 class MediaControllerImpl @Inject constructor(
     @ApplicationContext private val context: Context
@@ -81,6 +84,14 @@ class MediaControllerImpl @Inject constructor(
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                     updateState()
                 }
+
+                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                    updateState()
+                }
+
+                override fun onMetadata(metadata: androidx.media3.common.Metadata) {
+                    updateState()
+                }
             })
             updateState()
             handlePositionPolling(controller?.isPlaying == true)
@@ -104,21 +115,37 @@ class MediaControllerImpl @Inject constructor(
         val currentM3Item = currentController.currentMediaItem
         
         val domainItem = if (currentM3Item != null) {
+            val metadata = currentM3Item.mediaMetadata
             if (cachedMediaItem?.id == currentM3Item.mediaId) {
+                val updatedItem = cachedMediaItem?.copy(
+                    title = metadata.title?.toString() ?: cachedMediaItem?.title ?: "Unknown Title",
+                    artist = metadata.artist?.toString() ?: cachedMediaItem?.artist ?: "Unknown Artist",
+                    artworkUrl = metadata.artworkUri?.toString() ?: cachedMediaItem?.artworkUrl,
+                    isVideo = metadata.extras?.let { 
+                        if (it.containsKey(EXTRA_IS_VIDEO)) it.getBoolean(EXTRA_IS_VIDEO) 
+                        else cachedMediaItem?.isVideo 
+                    } ?: cachedMediaItem?.isVideo ?: false
+                )
+                if (updatedItem != cachedMediaItem) {
+                    cachedMediaItem = updatedItem
+                }
                 cachedMediaItem
             } else {
-                val extras = currentM3Item.mediaMetadata.extras
                 DomainMediaItem(
                     id = currentM3Item.mediaId,
-                    title = currentM3Item.mediaMetadata.title?.toString() ?: "Unknown Title",
-                    artist = currentM3Item.mediaMetadata.artist?.toString() ?: "Unknown Artist",
-                    artworkUrl = currentM3Item.mediaMetadata.artworkUri?.toString(),
-                    isVideo = extras?.getBoolean(EXTRA_IS_VIDEO) ?: false
+                    title = metadata.title?.toString() ?: "Unknown Title",
+                    artist = metadata.artist?.toString() ?: "Unknown Artist",
+                    artworkUrl = metadata.artworkUri?.toString(),
+                    isVideo = metadata.extras?.getBoolean(EXTRA_IS_VIDEO) ?: false,
+                    resolvedStreamingUrl = currentM3Item.localConfiguration?.uri?.toString() ?: ""
                 ).also { cachedMediaItem = it }
             }
         } else {
-            cachedMediaItem = null
-            null
+            // If player is idle and NOT preparing, clear cache. 
+            if (currentController.playbackState == Player.STATE_IDLE && currentController.currentMediaItem == null) {
+                cachedMediaItem = null
+            }
+            cachedMediaItem
         }
 
         val newState = when {
@@ -144,6 +171,7 @@ class MediaControllerImpl @Inject constructor(
         }
         
         if (_sessionState.value != newState) {
+            Log.d("MediaControllerImpl", "Emitting new state: $newState")
             _sessionState.value = newState
         }
     }
@@ -174,7 +202,10 @@ class MediaControllerImpl @Inject constructor(
     }
 
     override fun prepare(mediaItem: DomainMediaItem, playableUri: String) {
+        cachedMediaItem = mediaItem
+        Log.d("MediaControllerImpl", "Preparing with mediaItem: ${mediaItem.id}")
         ensureConnected()
+        
         val m3Item = MediaItem.Builder()
             .setMediaId(mediaItem.id)
             .setUri(playableUri)
@@ -193,13 +224,14 @@ class MediaControllerImpl @Inject constructor(
             currentController.setMediaItem(m3Item)
             currentController.playWhenReady = true
             currentController.prepare()
+            updateState()
         } else {
-            // If controller is not ready, wait for it
             controllerFuture?.addListener({
                 controller?.let { player ->
                     player.setMediaItem(m3Item)
                     player.playWhenReady = true
                     player.prepare()
+                    updateState()
                 }
             }, mainExecutor)
         }

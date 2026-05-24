@@ -8,5 +8,6 @@ data class DomainMediaItem(
     val title: String,
     val artist: String,
     val artworkUrl: String?,
-    val isVideo: Boolean
+    val isVideo: Boolean,
+    val resolvedStreamingUrl: String
 )

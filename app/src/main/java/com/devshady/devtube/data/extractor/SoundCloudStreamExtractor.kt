@@ -1,6 +1,7 @@
 package com.devshady.devtube.data.extractor
 
 import android.util.Log
+import com.devshady.devtube.domain.model.DomainMediaItem
 import com.devshady.devtube.domain.playback.MediaStreamExtractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,7 +12,7 @@ import javax.inject.Singleton
 @Singleton
 class SoundCloudStreamExtractor @Inject constructor() : MediaStreamExtractor {
 
-    override suspend fun extractPlayableUri(mediaId: String, isAudioOnly: Boolean): String =
+    override suspend fun extractPlayableUri(mediaId: String, isAudioOnly: Boolean): DomainMediaItem =
         withContext(Dispatchers.IO) {
             try {
                 // 1. Target NewPipe's native SoundCloud extraction pipeline
@@ -23,10 +24,21 @@ class SoundCloudStreamExtractor @Inject constructor() : MediaStreamExtractor {
 
                 // 3. Extract the premium quality audio asset streaming path
                 val optimalStream = extractor.audioStreams.maxByOrNull { it.bitrate }
+                val url = optimalStream?.url ?: throw Exception("No suitable stream found")
 
-                return@withContext optimalStream?.url
-                    ?: throw IllegalStateException("No suitable SoundCloud audio track found")
+                val thumbnails = extractor.thumbnails
+                val artwork = thumbnails?.maxByOrNull { it.width * it.height }?.url
+                    ?: thumbnails?.lastOrNull()?.url
+                    ?: "https://picsum.photos/seed/${mediaId.hashCode()}/400/400"
 
+                return@withContext DomainMediaItem(
+                    id = mediaId,
+                    title = extractor.name ?: "Unknown Title",
+                    artist = extractor.uploaderName ?: "Unknown Artist",
+                    artworkUrl = artwork,
+                    isVideo = false, // SoundCloud is audio-only in our UI logic
+                    resolvedStreamingUrl = url
+                )
             } catch (e: Exception) {
                 Log.e("DevTubeExtractor", "SoundCloud extraction critical failure", e)
                 throw Exception("SoundCloud extraction failed: ${e.message}", e)
